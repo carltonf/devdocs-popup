@@ -1,0 +1,29 @@
+{
+  "name": "Devdocs Popup",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "Popup a devdocs window with its mobile version for quick lookup.",
+  "content_scripts":[
+    {
+      "matches": ["http://devdocs.io/*"],
+      "js": ["scripts/devdocs-content-ua.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "background": {
+    "scripts": [
+      "scripts/background.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": {
+      "19": "images/icon-19.png",
+      "38": "images/icon-38.png"
+    },
+    "default_title": "DevDocs Popup"
+  },
+  "permissions": [
+    "http://devdocs.io/*"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+}
