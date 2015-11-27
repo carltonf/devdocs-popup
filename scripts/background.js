@@ -43,7 +43,34 @@ chrome.browserAction.onClicked.addListener(function (tab) {
 chrome.windows.onRemoved.addListener(function (winId) {
   'use strict';
 
-  if (winId === devdocsPopupWin.id) {
+  if (devdocsPopupWin && (winId === devdocsPopupWin.id)) {
     devdocsPopupWin = null;
+  }
+});
+
+// Communicate with content script
+chrome.runtime.onMessage.addListener(function (msg, sender, sendRes) {
+  'use strict';
+
+  switch (msg.command) {
+  case "checkCurWinIsPopupWin":
+    if(devdocsPopupWin === null){
+      sendRes({
+        result: false
+      });
+    } else {
+      // TODO: devdocsPopupWin.focused will always return true, this might be that
+      // devdocsPopupWin is only a copy its state will get stale. We should only store
+      // devdocsPopupWinId
+      chrome.windows.get(devdocsPopupWin.id, popup => {
+        sendRes({
+          result: popup.focused
+        });
+      });
+
+      return true;
+    }
+    break;
+  default:
   }
 });
