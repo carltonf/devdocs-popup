@@ -1,15 +1,19 @@
-// ref: http://stackoverflow.com/a/7557433/2526378
-function isElementInViewport (el) {
-    var rect = el.getBoundingClientRect();
+var headerNav = document.querySelector('._header'),
+    headerNavRect = headerNav.getBoundingClientRect(),
+    searchInput = document.querySelector('._search-input'),
+    candidatesList = document.querySelector('._sidebar > ._list');
 
-    return (rect.top >= 0
-            && rect.left >= 0
-            && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
-            && rect.right <= (window.innerWidth || document.documentElement.clientWidth));
+// Test whether an entry is still visible
+// ref: http://stackoverflow.com/a/7557433/2526378
+function isEntryVisible (el) {
+  var rect = el.getBoundingClientRect();
+
+  return (rect.top >= headerNavRect.bottom // not hidden by header bar
+          && rect.left >= 0
+          && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+          && rect.right <= (window.innerWidth || document.documentElement.clientWidth));
 }
 
-var searchInput = document.querySelector('._search-input'),
-    candidatesList = document.querySelector('._sidebar > ._list');
 
 // @param: entry, allow null, then this function doesn't do anything
 function focusThisEntry (entry){
@@ -36,26 +40,38 @@ function focusNext(){
 function focusPrev(){
   var prevEntry = document.querySelector('._list .focus').previousSibling;
 
-  focusThisEntry(nextEntry);
+  focusThisEntry(prevEntry);
 }
 
 function focusFirstVisible(){
   'use strict';
+  var entryList = document.querySelectorAll('._list a');
+  for (let i = 0; i < entryList.length; i++){
+    let entry = entryList[i];
 
-  var curFocused = document.querySelector('._list .focus');
-
-  if ( isElementInViewport(curFocused) ){
-    return;
-  }
-
-  for(let entry in document.querySelectorsAll('._list a')){
-    if( isElementInViewport(entry) ){
+    if( isEntryVisible(entry) ){
       focusThisEntry(entry);
 
       return;
     }
   }
 }
+
+function focusLastVisible(){
+  'use strict';
+
+  var entryList = document.querySelectorAll('._list a');
+  for (let i = entryList.length - 1; i >= 0; i--){
+    let entry = entryList[i];
+
+    if( isEntryVisible(entry) ){
+      focusThisEntry(entry);
+
+      return;
+    }
+  }
+}
+
 
 function focusFirst(){
   'use strict';
@@ -73,14 +89,14 @@ function chooseCurFocused(){
     document.querySelector('._list .focus').click();
 }
 
+// HACK: I've used setTimeout for various key events due to various timing
+// issues.
 window.onkeydown = function(e){
   'use strict';
 
   var keyCode = e.which;
   if ((48 <= keyCode && keyCode <= 57)
       || (65 <= keyCode && keyCode <= 90)){
-    // HACK: It's too early to focus the first here,
-    // we need to wait for search results loaded
     setTimeout(function(){
       focusFirst();
     }, 200);
@@ -102,8 +118,14 @@ window.onkeydown = function(e){
   case 18: // alt key to toggle between list and content
     document.querySelector('a._menu-link').click();
     break;
+  case 33:                      // page up
+    setTimeout(focusFirstVisible, 100);
+    break;
+  case 34:                      // page down
+    setTimeout(focusLastVisible, 100);
+    break;
   default:
-    console.log('Unhandled: ' + e.which);
+    console.log('Unhandled key: ' + e.which);
   }
 };
 
