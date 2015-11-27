@@ -33,15 +33,42 @@ function switchToPopupWin() {
   chrome.windows.update(devdocsPopupId, updateInfo);
 }
 
-chrome.browserAction.onClicked.addListener(function (tab) {
+function hidePopupWin() {
+  'use strict';
+
+  var updateInfo = {
+    state: 'minimized'
+  };
+
+  chrome.windows.update(devdocsPopupId, updateInfo);
+}
+
+
+function togglePopupWin() {
   'use strict';
 
   if (devdocsPopupId) {
-    switchToPopupWin();
+
+    chrome.windows.get(devdocsPopupId, function (popup) {
+      if (!popup) {
+        return;
+      }
+
+      if (popup.focused) {
+        hidePopupWin();
+      } else {
+        switchToPopupWin();
+      }
+    });
+
   } else {
     createPopupWin();
   }
+}
 
+chrome.browserAction.onClicked.addListener(function (tab) {
+  'use strict';
+  togglePopupWin();
 });
 
 chrome.windows.onRemoved.addListener(function (winId) {
@@ -49,6 +76,16 @@ chrome.windows.onRemoved.addListener(function (winId) {
 
   if (winId === devdocsPopupId) {
     devdocsPopupId = null;
+  }
+});
+
+chrome.commands.onCommand.addListener(function (cmd) {
+  'use strict';
+
+  switch (cmd) {
+  case "toggle-popup":
+    togglePopupWin();
+    break;
   }
 });
 
