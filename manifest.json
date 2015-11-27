@@ -23,6 +23,7 @@
     "default_title": "DevDocs Popup"
   },
   "permissions": [
+    "tabs",
     "http://devdocs.io/*"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
