@@ -1,6 +1,10 @@
 /*global chrome */
 
-var devdocsPopupWin = null;
+// NOTE: chrome.windows.Window object is stored through copy, so its state will
+// get stale. For example, storedWin.focused will always return true.
+//
+// We should only store window Id.
+var devdocsPopupId = null;
 
 function createPopupWin() {
   'use strict';
@@ -15,7 +19,7 @@ function createPopupWin() {
 
   chrome.windows.create(createData, function (win) {
 
-    devdocsPopupWin = win;
+    devdocsPopupId = win.id;
   });
 }
 
@@ -26,13 +30,13 @@ function switchToPopupWin() {
     focused: true
   };
 
-  chrome.windows.update(devdocsPopupWin.id, updateInfo);
+  chrome.windows.update(devdocsPopupId, updateInfo);
 }
 
 chrome.browserAction.onClicked.addListener(function (tab) {
   'use strict';
 
-  if (devdocsPopupWin) {
+  if (devdocsPopupId) {
     switchToPopupWin();
   } else {
     createPopupWin();
@@ -43,8 +47,8 @@ chrome.browserAction.onClicked.addListener(function (tab) {
 chrome.windows.onRemoved.addListener(function (winId) {
   'use strict';
 
-  if (devdocsPopupWin && (winId === devdocsPopupWin.id)) {
-    devdocsPopupWin = null;
+  if (winId === devdocsPopupId) {
+    devdocsPopupId = null;
   }
 });
 
@@ -54,17 +58,14 @@ chrome.runtime.onMessage.addListener(function (msg, sender, sendRes) {
 
   switch (msg.command) {
   case "checkCurWinIsPopupWin":
-    if(devdocsPopupWin === null){
+    if (devdocsPopupId === null) {
       sendRes({
         result: false
       });
     } else {
-      // TODO: devdocsPopupWin.focused will always return true, this might be that
-      // devdocsPopupWin is only a copy its state will get stale. We should only store
-      // devdocsPopupWinId
-      chrome.windows.get(devdocsPopupWin.id, popup => {
+      chrome.windows.get(devdocsPopupId, function (popup) {
         sendRes({
-          result: popup.focused
+          result: (popup && popup.focused)
         });
       });
 
