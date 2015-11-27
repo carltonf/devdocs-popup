@@ -6,8 +6,13 @@
   "content_scripts":[
     {
       "matches": ["http://devdocs.io/*"],
-      "js": ["scripts/devdocs-content-ua.js"],
+      "js": ["scripts/content-ua.js"],
       "run_at": "document_start"
+    },
+    {
+      "matches": ["http://devdocs.io/*"],
+      "js": ["scripts/content-shortcuts.js"],
+      "run_at": "document_end"
     }
   ],
   "background": {
