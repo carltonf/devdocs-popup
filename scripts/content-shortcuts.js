@@ -91,27 +91,53 @@ function chooseCurFocused(){
 
 // HACK: I've used setTimeout for various key events due to various timing
 // issues.
+searchInput.addEventListener('input', function(){
+  setTimeout(function(){
+    focusFirst();
+  }, 200);
+});
+
 window.onkeydown = function(e){
   'use strict';
 
-  var keyCode = e.which;
-  if ((48 <= keyCode && keyCode <= 57)
-      || (65 <= keyCode && keyCode <= 90)){
-    setTimeout(function(){
-      focusFirst();
-    }, 200);
+  // use form attribute to check whether the typing is in the input
+  var isInputFocused = e.target.form,
+      keyCode = e.which;
+  if (!isInputFocused
+      && ((keyCode === 8)       // backspace
+          || (keyCode === 190)  // '.'
+          || (keyCode === 186)  // ':'
+          // ascii code
+          || (48 <= keyCode && keyCode <= 57)
+          || (65 <= keyCode && keyCode <= 90))){
+    // typing to immediately re-focus the input box, erase the content as well
+    // unless it's backspace
+    if (keyCode !== 8){
+      searchInput.value = '';
+    }
+
+    searchInput.focus();
 
     return;
   }
 
+  // Control keys for easy navigation
+  // ref: http://stackoverflow.com/a/4866269/2526378
+  if ( candidatesList.style.display === 'none' ){
+    // if candidate list is not visible, do nothing
+    return;
+  }
+
   switch(e.which){
-  case 38:  // up
+  case 38:                      // up
     focusPrev();
+    e.preventDefault();
     break;
-  case 40:  // down
+  case 40:                      // down
     focusNext();
+    e.preventDefault();
     break;
-  case 13:
+  case 13:                      // enter
     chooseCurFocused();
     break;
     // todo: use space key to switch
@@ -126,6 +152,7 @@ window.onkeydown = function(e){
     break;
   default:
     console.log('Unhandled key: ' + e.which);
+    return;
   }
 };
 
