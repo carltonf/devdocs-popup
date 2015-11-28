@@ -82,7 +82,11 @@ function focusFirst () {
 }
 
 function chooseCurFocused () {
-  document.querySelector('._list .focus').click();
+  var curFocusedEntry = document.querySelector('._list .focus');
+
+  if (curFocusedEntry) {
+    curFocusedEntry.click();
+  }
 }
 
 // HACK: I've used setTimeout for various key events due to various timing
@@ -120,7 +124,7 @@ function handleCandidatesListNavigationControls (keyEvent) {
     chooseCurFocused();
     break;
     // todo: use space key to switch
-  case 18: // alt key to toggle between list and content
+  case 32: // space key to toggle between list and content
     document.querySelector('a._menu-link').click();
     break;
   case 33:                      // page up

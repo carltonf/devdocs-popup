@@ -11,7 +11,9 @@
     },
     {
       "matches": ["http://devdocs.io/*"],
-      "js": ["scripts/content-shortcuts.js"],
+      "js": [ "scripts/content-shortcuts.js",
+              "scripts/content-lookup.js"
+            ],
       "run_at": "document_end"
     }
   ],
@@ -19,6 +21,9 @@
     "scripts": [
       "scripts/background.js"
     ]
+  },
+  "icons": {
+    "16": "images/icon-16.png"
   },
   "browser_action": {
     "default_icon": {
@@ -28,6 +33,7 @@
     "default_title": "DevDocs Popup"
   },
   "permissions": [
+    "contextMenus",
     "tabs",
     "http://devdocs.io/*"
   ],

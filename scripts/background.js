@@ -96,3 +96,37 @@ chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sen
   default:
   }
 });
+
+// Context Menu
+function searchTextInPopup (info) {
+  var searchStr = info.selectionText;
+  if (devdocsPopupId) {
+    switchToPopupWin();
+  } else {
+    createPopupWin();
+  }
+  // TODO store tabId when the window is created
+  //
+  // TODO if the popup window has NOT been created, the following query returns
+  // nothing.
+  chrome.tabs.query({windowId: devdocsPopupId}, function queryPopupWinTabCB (tabs) {
+    var popupWinTabId = tabs[0].id;
+
+    chrome.tabs.sendMessage(popupWinTabId, {
+      command: 'search',
+      str: searchStr,
+    });
+  });
+}
+function createContextMenuEntry () {
+  var contextMenuEntryCreateProps = {
+    type: 'normal',
+    title: 'Search in Devdocs Popup for "selected text"...',
+    contexts: ['selection'],
+    onclick: searchTextInPopup,
+  };
+
+  chrome.contextMenus.create(contextMenuEntryCreateProps);
+}
+
+createContextMenuEntry();
