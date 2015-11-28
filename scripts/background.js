@@ -1,14 +1,11 @@
-/*global chrome */
-
 // NOTE: chrome.windows.Window object is stored through copy, so its state will
 // get stale. For example, storedWin.focused will always return true.
 //
 // We should only store window Id.
+
 var devdocsPopupId = null;
 
-function createPopupWin() {
-  'use strict';
-
+function createPopupWin () {
   var createData = {
     url: "http://devdocs.io",
     width: 600,
@@ -17,15 +14,12 @@ function createPopupWin() {
     type: 'popup'
   };
 
-  chrome.windows.create(createData, function (win) {
-
+  chrome.windows.create(createData, function createPopupWinAsyncCB (win) {
     devdocsPopupId = win.id;
   });
 }
 
-function switchToPopupWin() {
-  'use strict';
-
+function switchToPopupWin () {
   var updateInfo = {
     focused: true
   };
@@ -33,9 +27,7 @@ function switchToPopupWin() {
   chrome.windows.update(devdocsPopupId, updateInfo);
 }
 
-function hidePopupWin() {
-  'use strict';
-
+function hidePopupWin () {
   var updateInfo = {
     state: 'minimized'
   };
@@ -44,12 +36,9 @@ function hidePopupWin() {
 }
 
 
-function togglePopupWin() {
-  'use strict';
-
+function togglePopupWin () {
   if (devdocsPopupId) {
-
-    chrome.windows.get(devdocsPopupId, function (popup) {
+    chrome.windows.get(devdocsPopupId, function togglePopupWinAsyncCB (popup) {
       if (!popup) {
         return;
       }
@@ -60,47 +49,44 @@ function togglePopupWin() {
         switchToPopupWin();
       }
     });
-
   } else {
     createPopupWin();
   }
 }
 
-chrome.browserAction.onClicked.addListener(function (tab) {
-  'use strict';
+chrome.browserAction.onClicked.addListener(function browserActionOnClickCB () {
+  var s,
+    hello;
   togglePopupWin();
 });
 
-chrome.windows.onRemoved.addListener(function (winId) {
-  'use strict';
-
+chrome.windows.onRemoved.addListener(function popupOnRemovedCB (winId) {
   if (winId === devdocsPopupId) {
     devdocsPopupId = null;
   }
 });
 
-chrome.commands.onCommand.addListener(function (cmd) {
-  'use strict';
-
+// what to do when the shortcut doesn't work
+// ref: http://stackoverflow.com/a/20747101
+chrome.commands.onCommand.addListener(function chromeCmdHandler (cmd) {
   switch (cmd) {
   case "toggle-popup":
     togglePopupWin();
     break;
+  default:
   }
 });
 
 // Communicate with content script
-chrome.runtime.onMessage.addListener(function (msg, sender, sendRes) {
-  'use strict';
-
+chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sendRes) {
   switch (msg.command) {
-  case "checkCurWinIsPopupWin":
+  case 'checkCurWinIsPopupWin':
     if (devdocsPopupId === null) {
       sendRes({
         result: false
       });
     } else {
-      chrome.windows.get(devdocsPopupId, function (popup) {
+      chrome.windows.get(devdocsPopupId, function getPopupAndSendRes (popup) {
         sendRes({
           result: (popup && popup.focused)
         });

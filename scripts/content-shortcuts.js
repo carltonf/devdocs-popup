@@ -1,7 +1,9 @@
-var headerNav = document.querySelector('._header'),
-    headerNavRect = headerNav.getBoundingClientRect(),
-    searchInput = document.querySelector('._search-input'),
-    candidatesList = document.querySelector('._sidebar > ._list');
+'use strict';
+
+const headerNav = document.querySelector('._header');
+var headerNavRect = headerNav.getBoundingClientRect();
+var searchInput = document.querySelector('._search-input');
+var candidatesList = document.querySelector('._sidebar > ._list');
 
 // Test whether an entry is still visible
 // ref: http://stackoverflow.com/a/7557433/2526378
@@ -16,40 +18,38 @@ function isEntryVisible (el) {
 
 
 // @param: entry, allow null, then this function doesn't do anything
-function focusThisEntry (entry){
-  'use strict';
-
-  if(entry === null)
+function focusThisEntry (entry) {
+  if (entry === null) {
     return;
+  }
 
-  let curEntry = document.querySelector('._list .focus');
+  const curEntry = document.querySelector('._list .focus');
 
-  if (curEntry){
+  if (curEntry) {
     curEntry.classList.remove('focus');
   }
 
   entry.classList.add('focus');
 }
 
-function focusNext(){
+function focusNext () {
   var nextEntry = document.querySelector('._list .focus').nextSibling;
 
   focusThisEntry(nextEntry);
 }
 
-function focusPrev(){
+function focusPrev () {
   var prevEntry = document.querySelector('._list .focus').previousSibling;
 
   focusThisEntry(prevEntry);
 }
 
-function focusFirstVisible(){
-  'use strict';
+function focusFirstVisible () {
   var entryList = document.querySelectorAll('._list a');
-  for (let i = 0; i < entryList.length; i++){
-    let entry = entryList[i];
+  for (let i = 0; i < entryList.length; i++) {
+    const entry = entryList[i];
 
-    if( isEntryVisible(entry) ){
+    if ( isEntryVisible(entry) ) {
       focusThisEntry(entry);
 
       return;
@@ -57,14 +57,12 @@ function focusFirstVisible(){
   }
 }
 
-function focusLastVisible(){
-  'use strict';
-
+function focusLastVisible () {
   var entryList = document.querySelectorAll('._list a');
-  for (let i = entryList.length - 1; i >= 0; i--){
-    let entry = entryList[i];
+  for (let i = entryList.length - 1; i >= 0; i--) {
+    const entry = entryList[i];
 
-    if( isEntryVisible(entry) ){
+    if ( isEntryVisible(entry) ) {
       focusThisEntry(entry);
 
       return;
@@ -73,46 +71,40 @@ function focusLastVisible(){
 }
 
 
-function focusFirst(){
-  'use strict';
-
-  if (document.querySelector('._list .focus')){
+function focusFirst () {
+  if (document.querySelector('._list .focus')) {
     return;
   }
 
-  let firstCandidate = document.querySelector('._list :first-child');
+  const firstCandidate = document.querySelector('._list :first-child');
 
   focusThisEntry(firstCandidate);
 }
 
-function chooseCurFocused(){
-    document.querySelector('._list .focus').click();
+function chooseCurFocused () {
+  document.querySelector('._list .focus').click();
 }
 
 // HACK: I've used setTimeout for various key events due to various timing
 // issues.
-searchInput.addEventListener('input', function(){
-  setTimeout(function(){
-    focusFirst();
-  }, 200);
+searchInput.addEventListener('input', function searchInputCB () {
+  setTimeout(focusFirst, 200);
 });
 
-window.onkeydown = function(e){
-  'use strict';
-
+window.onkeydown = function keyDownCB (e) {
   // use form attribute to check whether the typing is in the input
-  var isInputFocused = e.target.form,
-      keyCode = e.which;
+  var isInputFocused = e.target.form;
+  var keyCode = e.which;
   if (!isInputFocused
       && ((keyCode === 8)       // backspace
           || (keyCode === 190)  // '.'
           || (keyCode === 186)  // ':'
           // ascii code
           || (48 <= keyCode && keyCode <= 57)
-          || (65 <= keyCode && keyCode <= 90))){
+          || (65 <= keyCode && keyCode <= 90))) {
     // typing to immediately re-focus the input box, erase the content as well
     // unless it's backspace
-    if (keyCode !== 8){
+    if (keyCode !== 8) {
       searchInput.value = '';
     }
 
@@ -123,12 +115,12 @@ window.onkeydown = function(e){
 
   // Control keys for easy navigation
   // ref: http://stackoverflow.com/a/4866269/2526378
-  if ( candidatesList.style.display === 'none' ){
+  if ( candidatesList.style.display === 'none' ) {
     // if candidate list is not visible, do nothing
     return;
   }
 
-  switch(e.which){
+  switch (e.which) {
   case 38:                      // up
     focusPrev();
     e.preventDefault();
@@ -158,12 +150,13 @@ window.onkeydown = function(e){
 
 // Give mouse visual feedback
 // NOTE: ._list is NOT available
-document.querySelector('._sidebar').addEventListener('mousedown', function(e){
-  var entry = e.target,
-      entryListNode = document.querySelector('._list');
+document.querySelector('._sidebar')
+  .addEventListener('mousedown', function sidebarMousedownCB (e) {
+    var entry = e.target;
+    var entryListNode = document.querySelector('._list');
 
-  if (!entryListNode) return;
-  if (entry.parentNode !== entryListNode) return;
+    if (!entryListNode) return;
+    if (entry.parentNode !== entryListNode) return;
 
-  focusThisEntry(entry);
-});
+    focusThisEntry(entry);
+  });

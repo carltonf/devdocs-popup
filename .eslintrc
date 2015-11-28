@@ -1,0 +1,27 @@
+{
+  "extends": "airbnb/base",
+  "emcaFeatures": {
+    // Try to use es6 features within chrome extension, we need set 'use strict'
+    // globally. Since es6 modules are strict by default, disable it to avoid
+    // "unnecessary" strict errors.
+    "modules": false
+  },
+  "rules": {
+    // disable requiring trailing commas because it might be nice to revert to
+    // being JSON at some point, and I don't want to make big changes now.
+    "comma-dangle": 0,
+    // for chrome extension, only strict mode allows let/const
+    "no-var": 0,
+    "strict": 0,
+    // the change cost is a bit high
+    "quotes": 0,
+    "no-console": 0,
+    // my style
+    "space-before-function-paren": [2, "always"],
+    "space-before-blocks": 2,
+    "yoda": 0,
+  },
+  "globals": {
+    "chrome": false
+  }
+}

@@ -1,8 +1,4 @@
-/*global Navigator, CustomEvent, chrome */
-
-function changeUAInPage() {
-  'use strict';
-
+function changeUAInPage () {
   // ref: http://stackoverflow.com/a/23456845/2526378
   // Trick to change the navigator.userAgent from JS side
   //
@@ -13,15 +9,14 @@ function changeUAInPage() {
   // chrome.webRequest doesn't help.
   //
   // TODO suggests devdocs to have an option or URL params to force mobile version
-  var actualCode =  '(' + function () {
-    var navigator = window.navigator,
-      modifiedNavigator = null;
+  var injectCode = '(' + function injectCodeFunc () {
+    var navigator = window.navigator;
+    var modifiedNavigator = null;
 
     if (Navigator.prototype.hasOwnProperty('userAgent')) {
       // Chrome 43+ moved all properties from navigator to the prototype,
       // so we have to modify the prototype instead of navigator.
       modifiedNavigator = Navigator.prototype;
-
     } else {
       // Chrome 42- defined the property on navigator.
       modifiedNavigator = Object.create(navigator);
@@ -43,7 +38,7 @@ function changeUAInPage() {
     });
   } + ')();';
 
-  document.documentElement.setAttribute('onreset', actualCode);
+  document.documentElement.setAttribute('onreset', injectCode);
   document.documentElement.dispatchEvent(new CustomEvent('reset'));
   document.documentElement.removeAttribute('onreset');
 }
@@ -54,9 +49,7 @@ function changeUAInPage() {
 // see https://developer.chrome.com/extensions/content_scripts#pi
 chrome.runtime.sendMessage({
   "command": "checkCurWinIsPopupWin"
-}, function (res) {
-  'use strict';
-
+}, function checkCurWinIsPopupWinResHandler (res) {
   if (res === undefined) {
     console.error("Can't check current window is Popup window.");
     return false;
