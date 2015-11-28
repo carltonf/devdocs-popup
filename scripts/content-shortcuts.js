@@ -88,6 +88,12 @@ function chooseCurFocused () {
 // HACK: I've used setTimeout for various key events due to various timing
 // issues.
 searchInput.addEventListener('input', function searchInputCB () {
+  // Hide notice bar that informs the user some documentation is not enabled.
+  var noticeBar = document.querySelector('._notice');
+  if (noticeBar) {
+    noticeBar.style.display = "none";
+  }
+
   setTimeout(focusFirst, 200);
 });
 
