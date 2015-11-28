@@ -97,43 +97,24 @@ searchInput.addEventListener('input', function searchInputCB () {
   setTimeout(focusFirst, 200);
 });
 
-window.onkeydown = function keyDownCB (e) {
-  // use form attribute to check whether the typing is in the input
-  var isInputFocused = e.target.form;
-  var keyCode = e.which;
-  if (!isInputFocused
-      && ((keyCode === 8)       // backspace
+function isTypingKey (keyCode) {
+  return ((keyCode === 8)       // backspace
           || (keyCode === 190)  // '.'
           || (keyCode === 186)  // ':'
           // ascii code
           || (48 <= keyCode && keyCode <= 57)
-          || (65 <= keyCode && keyCode <= 90))) {
-    // typing to immediately re-focus the input box, erase the content as well
-    // unless it's backspace
-    if (keyCode !== 8) {
-      searchInput.value = '';
-    }
+          || (65 <= keyCode && keyCode <= 90));
+}
 
-    searchInput.focus();
-
-    return;
-  }
-
-  // Control keys for easy navigation
-  // ref: http://stackoverflow.com/a/4866269/2526378
-  if ( candidatesList.style.display === 'none' ) {
-    // if candidate list is not visible, do nothing
-    return;
-  }
-
-  switch (e.which) {
+function handleCandidatesListNavigationControls (keyEvent) {
+  switch (keyEvent.which) {
   case 38:                      // up
     focusPrev();
-    e.preventDefault();
+    keyEvent.preventDefault();
     break;
   case 40:                      // down
     focusNext();
-    e.preventDefault();
+    keyEvent.preventDefault();
     break;
   case 13:                      // enter
     chooseCurFocused();
@@ -149,9 +130,36 @@ window.onkeydown = function keyDownCB (e) {
     setTimeout(focusLastVisible, 100);
     break;
   default:
-    console.log('Unhandled key: ' + e.which);
+    console.log('Unhandled key: ' + keyEvent.which);
     return;
   }
+}
+
+window.onkeydown = function keyDownCB (e) {
+  // use form attribute to check whether the typing is in the input
+  var isInputFocused = e.target.form;
+  var keyCode = e.which;
+
+  // typing to immediately re-focus the input box
+  if (!isInputFocused && isTypingKey(keyCode)) {
+    if (keyCode !== 8) {
+      // Erase the content as well unless it's backspace
+      searchInput.value = '';
+    }
+
+    searchInput.focus();
+
+    return;
+  }
+
+  // Control keys for easy navigation
+  // ref: http://stackoverflow.com/a/4866269/2526378
+  if ( candidatesList.style.display === 'none' ) {
+    // if candidate list is not visible, do nothing
+    return;
+  }
+
+  handleCandidatesListNavigationControls(e);
 };
 
 // Give mouse visual feedback

@@ -55,8 +55,6 @@ function togglePopupWin () {
 }
 
 chrome.browserAction.onClicked.addListener(function browserActionOnClickCB () {
-  var s,
-    hello;
   togglePopupWin();
 });
 
