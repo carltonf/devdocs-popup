@@ -121,7 +121,7 @@ function searchTextInPopup (info) {
 function createContextMenuEntry () {
   var contextMenuEntryCreateProps = {
     type: 'normal',
-    title: 'Search in Devdocs Popup for "selected text"...',
+    title: 'Search devdocs.io for "%s"',
     contexts: ['selection'],
     onclick: searchTextInPopup,
   };
