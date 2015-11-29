@@ -7,20 +7,20 @@
     {
       "run_at": "document_start",
       "matches": ["http://devdocs.io/*"],
-      "js": [ "scripts/content-doc-start-init.js",
-              "scripts/content-ua.js" ]
+      "js": [ "scripts/content/doc-start-init.js",
+              "scripts/content/change-ua.js" ]
     },
     {
       "run_at": "document_end",
       "matches": ["http://devdocs.io/*"],
-      "js": [ "scripts/content-shortcuts.js",
-              "scripts/content-lookup.js" ]
+      "js": [ "scripts/content/shortcuts.js",
+              "scripts/content/lookup.js" ]
     }
   ],
   "background": {
     "scripts": [
-      "scripts/background.js",
-      "scripts/bg-after-load.js"
+      "scripts/background/index.js",
+      "scripts/background/after-load.js"
     ]
   },
   "icons": {
