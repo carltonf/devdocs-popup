@@ -3,7 +3,8 @@
 //
 // We should only store window Id.
 
-var devdocsPopupId = null;
+var popupWinId = null;
+var popupTabId = null;
 
 function createPopupWin () {
   var createData = {
@@ -16,7 +17,8 @@ function createPopupWin () {
 
   var createPopupProimse = new Promise(function createPopupPromiseExecutor (resolve) {
     chrome.windows.create(createData, function createPopupWinAsyncCB (win) {
-      devdocsPopupId = win.id;
+      popupWinId = win.id;
+      popupTabId = win.tabs[0].id;
 
       resolve(null);
     });
@@ -30,7 +32,7 @@ function switchToPopupWin () {
     focused: true
   };
 
-  chrome.windows.update(devdocsPopupId, updateInfo);
+  chrome.windows.update(popupWinId, updateInfo);
 }
 
 function hidePopupWin () {
@@ -38,13 +40,13 @@ function hidePopupWin () {
     state: 'minimized'
   };
 
-  chrome.windows.update(devdocsPopupId, updateInfo);
+  chrome.windows.update(popupWinId, updateInfo);
 }
 
 
 function togglePopupWin () {
-  if (devdocsPopupId) {
-    chrome.windows.get(devdocsPopupId, function togglePopupWinAsyncCB (popup) {
+  if (popupWinId) {
+    chrome.windows.get(popupWinId, function togglePopupWinAsyncCB (popup) {
       if (!popup) {
         return;
       }
@@ -65,8 +67,8 @@ chrome.browserAction.onClicked.addListener(function browserActionOnClickCB () {
 });
 
 chrome.windows.onRemoved.addListener(function popupOnRemovedCB (winId) {
-  if (winId === devdocsPopupId) {
-    devdocsPopupId = null;
+  if (winId === popupWinId) {
+    popupWinId = null;
   }
 });
 
@@ -86,7 +88,7 @@ chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sen
   switch (msg.command) {
   case 'checkCurWinIsPopupWin':
     sendRes({
-      result: (devdocsPopupId === sender.tab.windowId)
+      result: (popupWinId === sender.tab.windowId)
     });
     break;
   default:
@@ -102,24 +104,20 @@ chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sen
 // the user about this fact instead of silent failure.
 function searchSelectionInPopup (info) {
   var searchStr = info.selectionText;
-  if (devdocsPopupId) {
+  if (popupWinId) {
     switchToPopupWin();
   } else {
     createPopupWin().then(hidePopupWin);
   }
-  // TODO store tabId when the window is created
-  chrome.tabs.query({windowId: devdocsPopupId}, function queryPopupWinTabCB (tabs) {
-    var popupWinTabId = tabs[0].id;
 
-    chrome.tabs.sendMessage(popupWinTabId, {
-      command: 'search',
-      str: searchStr,
-    });
+  chrome.tabs.sendMessage(popupTabId, {
+    command: 'search',
+    str: searchStr,
   });
 
   // NOTE: A temporary workaround for the case when popup window has not been
   // created yet.
-  if (!devdocsPopupId) {
+  if (!popupWinId) {
     chrome.contextMenus.update("searchTheSelectionEntry", {
       title: 'Search devdocs.io for "%s"',
     });
@@ -134,7 +132,7 @@ function createContextMenuEntry () {
     onclick: searchSelectionInPopup,
   };
 
-  if (!devdocsPopupId) {
+  if (!popupWinId) {
     contextMenuEntryCreateProps.title = 'Open devdocs Popup first for selection search';
   }
 
