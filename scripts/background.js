@@ -11,12 +11,18 @@ function createPopupWin () {
     width: 600,
     height: 900,
     // Popup type will leave all browser chrome out
-    type: 'popup'
+    type: 'popup',
   };
 
-  chrome.windows.create(createData, function createPopupWinAsyncCB (win) {
-    devdocsPopupId = win.id;
+  var createPopupProimse = new Promise(function createPopupPromiseExecutor (resolve) {
+    chrome.windows.create(createData, function createPopupWinAsyncCB (win) {
+      devdocsPopupId = win.id;
+
+      resolve(null);
+    });
   });
+
+  return createPopupProimse;
 }
 
 function switchToPopupWin () {
@@ -50,7 +56,7 @@ function togglePopupWin () {
       }
     });
   } else {
-    createPopupWin();
+    createPopupWin().then(null);
   }
 }
 
@@ -79,36 +85,29 @@ chrome.commands.onCommand.addListener(function chromeCmdHandler (cmd) {
 chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sendRes) {
   switch (msg.command) {
   case 'checkCurWinIsPopupWin':
-    if (devdocsPopupId === null) {
-      sendRes({
-        result: false
-      });
-    } else {
-      chrome.windows.get(devdocsPopupId, function getPopupAndSendRes (popup) {
-        sendRes({
-          result: (popup && popup.focused)
-        });
-      });
-
-      return true;
-    }
+    sendRes({
+      result: (devdocsPopupId === sender.tab.windowId)
+    });
     break;
   default:
   }
 });
 
 // Context Menu
-function searchTextInPopup (info) {
+//
+// TODO About selection search when the popup window is NOT opened.
+//
+// Simply, it doesn't work. To implement such feature, the timing for background
+// and content needs to be well synced. For now, I'll use a workaround to warn
+// the user about this fact instead of silent failure.
+function searchSelectionInPopup (info) {
   var searchStr = info.selectionText;
   if (devdocsPopupId) {
     switchToPopupWin();
   } else {
-    createPopupWin();
+    createPopupWin().then(hidePopupWin);
   }
   // TODO store tabId when the window is created
-  //
-  // TODO if the popup window has NOT been created, the following query returns
-  // nothing.
   chrome.tabs.query({windowId: devdocsPopupId}, function queryPopupWinTabCB (tabs) {
     var popupWinTabId = tabs[0].id;
 
@@ -117,14 +116,27 @@ function searchTextInPopup (info) {
       str: searchStr,
     });
   });
+
+  // NOTE: A temporary workaround for the case when popup window has not been
+  // created yet.
+  if (!devdocsPopupId) {
+    chrome.contextMenus.update("searchTheSelectionEntry", {
+      title: 'Search devdocs.io for "%s"',
+    });
+  }
 }
 function createContextMenuEntry () {
   var contextMenuEntryCreateProps = {
+    id: "searchTheSelectionEntry",
     type: 'normal',
     title: 'Search devdocs.io for "%s"',
     contexts: ['selection'],
-    onclick: searchTextInPopup,
+    onclick: searchSelectionInPopup,
   };
+
+  if (!devdocsPopupId) {
+    contextMenuEntryCreateProps.title = 'Open devdocs Popup first for selection search';
+  }
 
   chrome.contextMenus.create(contextMenuEntryCreateProps);
 }
