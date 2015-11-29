@@ -104,22 +104,27 @@ chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sen
 // the user about this fact instead of silent failure.
 function searchSelectionInPopup (info) {
   var searchStr = info.selectionText;
-  if (popupWinId) {
-    switchToPopupWin();
-  } else {
-    createPopupWin().then(hidePopupWin);
+
+  function sendSearchStr () {
+    chrome.tabs.sendMessage(popupTabId, {
+      command: 'search',
+      str: searchStr,
+    });
   }
 
-  chrome.tabs.sendMessage(popupTabId, {
-    command: 'search',
-    str: searchStr,
-  });
+  if (popupWinId) {
+    switchToPopupWin();
 
-  // NOTE: A temporary workaround for the case when popup window has not been
-  // created yet.
-  if (!popupWinId) {
-    chrome.contextMenus.update("searchTheSelectionEntry", {
-      title: 'Search devdocs.io for "%s"',
+    sendSearchStr();
+  } else {
+    createPopupWin().then();
+
+    chrome.runtime.onMessage.addListener(function delayedSearchSelectionAfterLoad (msg) {
+      if (msg.command !== 'notify-window.onload') {
+        return;
+      }
+
+      sendSearchStr();
     });
   }
 }
@@ -131,10 +136,6 @@ function createContextMenuEntry () {
     contexts: ['selection'],
     onclick: searchSelectionInPopup,
   };
-
-  if (!popupWinId) {
-    contextMenuEntryCreateProps.title = 'Open devdocs Popup first for selection search';
-  }
 
   chrome.contextMenus.create(contextMenuEntryCreateProps);
 }

@@ -5,21 +5,22 @@
   "description": "Popup a devdocs window with its mobile version for quick lookup.",
   "content_scripts":[
     {
+      "run_at": "document_start",
       "matches": ["http://devdocs.io/*"],
-      "js": ["scripts/content-ua.js"],
-      "run_at": "document_start"
+      "js": [ "scripts/content-doc-start-init.js",
+              "scripts/content-ua.js" ]
     },
     {
+      "run_at": "document_end",
       "matches": ["http://devdocs.io/*"],
       "js": [ "scripts/content-shortcuts.js",
-              "scripts/content-lookup.js"
-            ],
-      "run_at": "document_end"
+              "scripts/content-lookup.js" ]
     }
   ],
   "background": {
     "scripts": [
-      "scripts/background.js"
+      "scripts/background.js",
+      "scripts/bg-after-load.js"
     ]
   },
   "icons": {

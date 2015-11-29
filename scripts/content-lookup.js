@@ -1,8 +1,8 @@
 'use strict';
 
-var searchInput = document.querySelector('._search-input');
-
 function setInputAndSearch (searchStr) {
+  var searchInput = document.querySelector('._search-input');
+
   // programatically trigger input event
   // ref: https://developer.mozilla.org/en-US/docs/Web/Guide/Events/Creating_and_triggering_events#Triggering_built-in_events
   var inputEvt = new UIEvent('input', {view: window,
