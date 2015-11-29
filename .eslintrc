@@ -22,6 +22,8 @@
     "yoda": 0,
   },
   "globals": {
-    "chrome": false
+    "chrome": false,
+    // specific to this extension
+    "bgGlobal": true
   }
 }

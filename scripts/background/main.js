@@ -3,9 +3,6 @@
 //
 // We should only store window Id.
 
-var popupWinId = null;
-var popupTabId = null;
-
 function createPopupWin () {
   var createData = {
     url: "http://devdocs.io",
@@ -17,8 +14,10 @@ function createPopupWin () {
 
   var createPopupProimse = new Promise(function createPopupPromiseExecutor (resolve) {
     chrome.windows.create(createData, function createPopupWinAsyncCB (win) {
-      popupWinId = win.id;
-      popupTabId = win.tabs[0].id;
+      bgGlobal.popup.winId = win.id;
+      bgGlobal.popup.tabId = win.tabs[0].id;
+
+      bgGlobal.dispatchMsgEvent('bg.popup.load');
 
       resolve(null);
     });
@@ -32,7 +31,7 @@ function switchToPopupWin () {
     focused: true
   };
 
-  chrome.windows.update(popupWinId, updateInfo);
+  chrome.windows.update(bgGlobal.popup.winId, updateInfo);
 }
 
 function hidePopupWin () {
@@ -40,13 +39,13 @@ function hidePopupWin () {
     state: 'minimized'
   };
 
-  chrome.windows.update(popupWinId, updateInfo);
+  chrome.windows.update(bgGlobal.popup.winId, updateInfo);
 }
 
 
 function togglePopupWin () {
-  if (popupWinId) {
-    chrome.windows.get(popupWinId, function togglePopupWinAsyncCB (popup) {
+  if (bgGlobal.popup.winId) {
+    chrome.windows.get(bgGlobal.popup.winId, function togglePopupWinAsyncCB (popup) {
       if (!popup) {
         return;
       }
@@ -67,8 +66,8 @@ chrome.browserAction.onClicked.addListener(function browserActionOnClickCB () {
 });
 
 chrome.windows.onRemoved.addListener(function popupOnRemovedCB (winId) {
-  if (winId === popupWinId) {
-    popupWinId = null;
+  if (winId === bgGlobal.popup.winId) {
+    bgGlobal.popup.winId = null;
   }
 });
 
@@ -78,18 +77,6 @@ chrome.commands.onCommand.addListener(function chromeCmdHandler (cmd) {
   switch (cmd) {
   case "toggle-popup":
     togglePopupWin();
-    break;
-  default:
-  }
-});
-
-// Communicate with content script
-chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sendRes) {
-  switch (msg.command) {
-  case 'checkCurWinIsPopupWin':
-    sendRes({
-      result: (popupWinId === sender.tab.windowId)
-    });
     break;
   default:
   }
@@ -106,13 +93,13 @@ function searchSelectionInPopup (info) {
   var searchStr = info.selectionText;
 
   function sendSearchStr () {
-    chrome.tabs.sendMessage(popupTabId, {
+    chrome.tabs.sendMessage(bgGlobal.popup.tabId, {
       command: 'search',
       str: searchStr,
     });
   }
 
-  if (popupWinId) {
+  if (bgGlobal.popup.winId) {
     switchToPopupWin();
 
     sendSearchStr();

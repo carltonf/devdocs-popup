@@ -44,16 +44,4 @@ function changeUAInPage () {
 }
 
 
-// Only change UA for the popup devdocs
-// OPTIMIZE: use programatic injection?
-// see https://developer.chrome.com/extensions/content_scripts#pi
-chrome.runtime.sendMessage({
-  "command": "checkCurWinIsPopupWin"
-}, function checkCurWinIsPopupWinResHandler (res) {
-  if (res === undefined) {
-    console.error("Can't check current window is Popup window.");
-    return false;
-  } else if (res.result === true) {
-    changeUAInPage();
-  }
-});
+changeUAInPage();

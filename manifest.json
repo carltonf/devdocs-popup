@@ -3,24 +3,12 @@
   "version": "0.0.1",
   "manifest_version": 2,
   "description": "Popup a devdocs window with its mobile version for quick lookup.",
-  "content_scripts":[
-    {
-      "run_at": "document_start",
-      "matches": ["http://devdocs.io/*"],
-      "js": [ "scripts/content/doc-start-init.js",
-              "scripts/content/change-ua.js" ]
-    },
-    {
-      "run_at": "document_end",
-      "matches": ["http://devdocs.io/*"],
-      "js": [ "scripts/content/shortcuts.js",
-              "scripts/content/lookup.js" ]
-    }
-  ],
+  "content_scripts":[],
   "background": {
     "scripts": [
-      "scripts/background/index.js",
-      "scripts/background/after-load.js"
+      "scripts/background/init.js",
+      "scripts/background/main.js",
+      "scripts/background/injections.js"
     ]
   },
   "icons": {
