@@ -1,0 +1,30 @@
+/**
+ * NOTE: As the page styles seem to load quite late, add html tag prefix to be
+ * more specific so as to override page CSS.
+ */
+
+html._mobile {
+  overflow: hidden;
+}
+
+html._mobile ._app {
+  overflow: hidden;
+}
+
+html._mobile ._sidebar,
+html._mobile ._content {
+  overflow-x: auto;
+  overflow-y: auto;
+
+  /* TODO file a bug in the upstream, ._container has been set with border-box but
+not ._sidebar, so when setting height: it's hard to get the value right (the
+paddings and margins are set.
+
+NOTE: With default content-box, the height CSS property specifies the height of
+the content area of an element. The content area is inside the padding, border,
+and margin of the element.) */
+  box-sizing: border-box;
+
+  /* TODO adapt with window size */
+  height: 100%;
+}

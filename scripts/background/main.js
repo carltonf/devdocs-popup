@@ -6,7 +6,7 @@
 function createPopupWin () {
   var createData = {
     url: "http://devdocs.io",
-    width: 600,
+    width: 650,
     height: 900,
     // Popup type will leave all browser chrome out
     type: 'popup',

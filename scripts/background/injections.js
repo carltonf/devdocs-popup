@@ -19,6 +19,27 @@ var popupOnlyContentScripts = [
   }
 ];
 
+var popupOnlyStyles = [
+  {
+    "matches": ["http://devdocs.io/*"],
+    "css": ["styles/mobile-desktopify.css"]
+  }
+];
+
+function injectStyles () {
+  popupOnlyStyles.forEach(
+    contentStyleBlock =>
+      contentStyleBlock.css.forEach(
+        styleFile =>
+          bgGlobal.addMsgEventListener('bg.popup.load', function injectSingleStyle () {
+            chrome.tabs.insertCSS(bgGlobal.popup.tabId, {
+              file: styleFile
+            });
+          })
+      )
+  );
+}
+
 function injectScripts () {
   popupOnlyContentScripts.forEach(
     contentScriptBlock =>
@@ -34,4 +55,6 @@ function injectScripts () {
   );
 }
 
+
 injectScripts();
+injectStyles();

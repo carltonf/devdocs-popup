@@ -36,12 +36,21 @@ function focusNext () {
   var nextEntry = document.querySelector('._list .focus').nextSibling;
 
   focusThisEntry(nextEntry);
+
+  if(nextEntry && !isEntryVisible(nextEntry)){
+    // nextEntry.focus();
+    nextEntry.scrollIntoView(false);
+  }
 }
 
 function focusPrev () {
   var prevEntry = document.querySelector('._list .focus').previousSibling;
 
   focusThisEntry(prevEntry);
+  if(prevEntry && !isEntryVisible(prevEntry)){
+    // prevEntry.focus();
+    prevEntry.scrollIntoView(true);
+  }
 }
 
 function focusFirstVisible () {
@@ -70,7 +79,6 @@ function focusLastVisible () {
   }
 }
 
-
 function focusFirst () {
   if (document.querySelector('._list .focus')) {
     return;
@@ -85,9 +93,24 @@ function chooseCurFocused () {
   var curFocusedEntry = document.querySelector('._list .focus');
 
   if (curFocusedEntry) {
+    // accidentally the following check toggle list and content view
+    if (curFocusedEntry.classList.contains('active')){
+      // todo an upstream problem: in mobile view, click on active entry should still
+      // jump to content
+      document.querySelector('a._menu-link').click();
+
+      return;
+    }
     curFocusedEntry.click();
+    searchInput.blur();
   }
 }
+// todo the same patchup active entry action
+document.querySelector('._sidebar').addEventListener('click', function patchUpActiveEntryBehavior (e){
+  if (e.target.classList.contains('active')){
+    document.querySelector('a._menu-link').click();
+  }
+});
 
 // HACK: I've used setTimeout for various key events due to various timing
 // issues.
@@ -111,6 +134,9 @@ function isTypingKey (keyCode) {
 }
 
 function handleCandidatesListNavigationControls (keyEvent) {
+  searchInput.blur();
+  document.querySelector('._list .focus').focus();
+
   switch (keyEvent.which) {
   case 38:                      // up
     focusPrev();
@@ -120,12 +146,9 @@ function handleCandidatesListNavigationControls (keyEvent) {
     focusNext();
     keyEvent.preventDefault();
     break;
+    // enter can now toggle list and content view
   case 13:                      // enter
     chooseCurFocused();
-    break;
-    // todo: use space key to switch
-  case 32: // space key to toggle between list and content
-    document.querySelector('a._menu-link').click();
     break;
   case 33:                      // page up
     setTimeout(focusFirstVisible, 100);
@@ -134,7 +157,22 @@ function handleCandidatesListNavigationControls (keyEvent) {
     setTimeout(focusLastVisible, 100);
     break;
   default:
-    console.log('Unhandled key: ' + keyEvent.which);
+    console.log('List-Nav, unhandled key: ' + keyEvent.which);
+    return;
+  }
+}
+
+function handleContentNavControls (keyEvent) {
+  searchInput.blur();
+  document.querySelector('._container').focus();
+
+  switch (keyEvent.which) {
+    // enter can now toggle list and content view
+  case 13:                      // enter
+    chooseCurFocused();
+    break;
+  default:
+    console.log('Content-Nav, unhandled key: ' + keyEvent.which);
     return;
   }
 }
@@ -145,25 +183,25 @@ window.onkeydown = function keyDownCB (e) {
   var keyCode = e.which;
 
   // typing to immediately re-focus the input box
-  if (!isInputFocused && isTypingKey(keyCode)) {
-    if (keyCode !== 8) {
-      // Erase the content as well unless it's backspace
-      searchInput.value = '';
+  if (isTypingKey(keyCode)) {
+    //if (keyCode !== 8) {
+    //  // Erase the content as well unless it's backspace
+    //  searchInput.value = '';
+    //}
+    if(!isInputFocused){
+      searchInput.focus();
     }
-
-    searchInput.focus();
 
     return;
   }
 
   // Control keys for easy navigation
   // ref: http://stackoverflow.com/a/4866269/2526378
-  if ( candidatesList.style.display === 'none' ) {
-    // if candidate list is not visible, do nothing
-    return;
+  if ( document.querySelector('._sidebar').style.display === 'none' ) {
+    handleContentNavControls(e);
+  } else {
+    handleCandidatesListNavigationControls(e);
   }
-
-  handleCandidatesListNavigationControls(e);
 };
 
 // Give mouse visual feedback
