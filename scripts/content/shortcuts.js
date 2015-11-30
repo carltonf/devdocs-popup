@@ -23,6 +23,10 @@ uiRefs.sidebar = $('._sidebar');
 // $('._sidebar > ._list') gets regenerated with each search, not appropriate
 // for persistent reference.
 uiRefs.list = null;
+uiRefs.content = $('._content');
+// make content focusable (we can use document.activeElement for verification)
+// ref: http://stackoverflow.com/a/3656524/2526378
+uiRefs.content.setAttribute('tabindex', 0);
 
 // Test whether an entry is still visible
 // ref: http://stackoverflow.com/a/7557433/2526378
@@ -122,7 +126,7 @@ function focusHLEntry () {
 
 function focusContent () {
   uiRefs.searchInput.blur();
-  $('._container').focus();
+  uiRefs.content.focus();
 }
 
 function toggleListContentView () {
@@ -149,7 +153,7 @@ function chooseHL () {
     }
 
     curHLEntry.click();
-    uiRefs.searchInput.blur();
+    focusContent();
   }
 }
 // todo an upstream problem: in mobile view, click on active entry should still jump to content

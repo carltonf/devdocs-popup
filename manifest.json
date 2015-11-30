@@ -7,8 +7,8 @@
   "background": {
     "scripts": [
       "scripts/background/init.js",
-      "scripts/background/main.js",
-      "scripts/background/injections.js"
+      "scripts/background/injections.js",
+      "scripts/background/main.js"
     ]
   },
   "icons": {
