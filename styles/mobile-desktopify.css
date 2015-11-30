@@ -9,6 +9,11 @@ html._mobile {
 
 html._mobile ._app {
   overflow: hidden;
+  /* NOTE: on desktop the bottom has a banner displaying link info, which obscures
+the last item.
+
+  TODO Temp fix: refer to original desktop version to fine-tune scroll behavior.*/
+  padding-bottom: 20px;
 }
 
 html._mobile ._sidebar,

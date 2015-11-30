@@ -7,3 +7,8 @@ window.addEventListener('load', function onceNotifyBGReady () {
 
   window.removeEventListener(onceNotifyBGReady);
 });
+
+
+// convenience only
+window.$ = document.querySelector.bind(document);
+window.$All = document.querySelectorAll.bind(document);

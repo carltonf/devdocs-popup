@@ -24,6 +24,8 @@
   "globals": {
     "chrome": false,
     // specific to this extension
-    "bgGlobal": true
+    "bgGlobal": true,
+    "$": false,
+    "$All": false
   }
 }

@@ -1,16 +1,35 @@
 'use strict';
 
-const headerNav = document.querySelector('._header');
-var headerNavRect = headerNav.getBoundingClientRect();
-var searchInput = document.querySelector('._search-input');
-var candidatesList = document.querySelector('._sidebar > ._list');
+// * About shortcuts management
+//
+// 1. The UI can be in two states: list and content.
+//
+// 2. Some keys' default action relies on focus on the proper elements to
+// function, and thus we need to manage focus as well.
+//
+// 3. Some conventions: in list view, when an entry is given a 'focus' class
+// it's *highlighted*. When the focus of the page is given to some element, it's
+// *focused*. When user *choose*/click on an entry it's *chosen*.
+//
+// 4. element visibility: entry can be visible or scrolled to.
+
+// refs to common ui components
+var uiRefs = {};
+
+uiRefs.header = $('._header');
+uiRefs.headerRect = uiRefs.header.getBoundingClientRect();
+uiRefs.searchInput = $('._search-input');
+uiRefs.sidebar = $('._sidebar');
+// $('._sidebar > ._list') gets regenerated with each search, not appropriate
+// for persistent reference.
+uiRefs.list = null;
 
 // Test whether an entry is still visible
 // ref: http://stackoverflow.com/a/7557433/2526378
 function isEntryVisible (el) {
   var rect = el.getBoundingClientRect();
 
-  return (rect.top >= headerNavRect.bottom // not hidden by header bar
+  return (rect.top >= uiRefs.headerRect.bottom // not hidden by header bar
           && rect.left >= 0
           && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
           && rect.right <= (window.innerWidth || document.documentElement.clientWidth));
@@ -18,12 +37,12 @@ function isEntryVisible (el) {
 
 
 // @param: entry, allow null, then this function doesn't do anything
-function focusThisEntry (entry) {
+function hlEntry (entry) {
   if (entry === null) {
     return;
   }
 
-  const curEntry = document.querySelector('._list .focus');
+  const curEntry = $('._list .focus');
 
   if (curEntry) {
     curEntry.classList.remove('focus');
@@ -32,187 +51,220 @@ function focusThisEntry (entry) {
   entry.classList.add('focus');
 }
 
-function focusNext () {
-  var nextEntry = document.querySelector('._list .focus').nextSibling;
+function hlNextAndScrollTo () {
+  var nextEntry = $('._list .focus').nextSibling;
 
-  focusThisEntry(nextEntry);
+  hlEntry(nextEntry);
 
-  if(nextEntry && !isEntryVisible(nextEntry)){
-    // nextEntry.focus();
+  if (nextEntry && !isEntryVisible(nextEntry)) {
     nextEntry.scrollIntoView(false);
   }
 }
 
-function focusPrev () {
-  var prevEntry = document.querySelector('._list .focus').previousSibling;
+function hlPrevAndScrollTo () {
+  var prevEntry = $('._list .focus').previousSibling;
 
-  focusThisEntry(prevEntry);
-  if(prevEntry && !isEntryVisible(prevEntry)){
-    // prevEntry.focus();
+  hlEntry(prevEntry);
+
+  if (prevEntry && !isEntryVisible(prevEntry)) {
     prevEntry.scrollIntoView(true);
   }
 }
 
-function focusFirstVisible () {
-  var entryList = document.querySelectorAll('._list a');
+function hlFirstVisible () {
+  var entryList = $All('._list a');
   for (let i = 0; i < entryList.length; i++) {
     const entry = entryList[i];
 
     if ( isEntryVisible(entry) ) {
-      focusThisEntry(entry);
+      hlEntry(entry);
 
       return;
     }
   }
 }
 
-function focusLastVisible () {
-  var entryList = document.querySelectorAll('._list a');
+function hlLastVisible () {
+  var entryList = $All('._list a');
   for (let i = entryList.length - 1; i >= 0; i--) {
     const entry = entryList[i];
 
     if ( isEntryVisible(entry) ) {
-      focusThisEntry(entry);
+      hlEntry(entry);
 
       return;
     }
   }
 }
 
-function focusFirst () {
-  if (document.querySelector('._list .focus')) {
+function hlFirst () {
+  if ($('._list .focus')) {
     return;
   }
 
-  const firstCandidate = document.querySelector('._list :first-child');
+  const firstCandidate = $('._list :first-child');
 
-  focusThisEntry(firstCandidate);
+  hlEntry(firstCandidate);
 }
 
-function chooseCurFocused () {
-  var curFocusedEntry = document.querySelector('._list .focus');
+function currentView () {
+  if ( uiRefs.sidebar.style.display === 'none' ) {
+    return 'content';
+  }
 
-  if (curFocusedEntry) {
-    // accidentally the following check toggle list and content view
-    if (curFocusedEntry.classList.contains('active')){
-      // todo an upstream problem: in mobile view, click on active entry should still
-      // jump to content
-      document.querySelector('a._menu-link').click();
+  return 'list';
+}
+
+function focusHLEntry () {
+  uiRefs.searchInput.blur();
+  $('._list .focus').focus();
+}
+
+function focusContent () {
+  uiRefs.searchInput.blur();
+  $('._container').focus();
+}
+
+function toggleListContentView () {
+  // todo call function to switch directly
+  $('a._menu-link').click();
+
+  // manage focus
+  if (currentView() === 'list') {
+    focusHLEntry();
+  } else {
+    focusContent();
+  }
+}
+
+function chooseHL () {
+  var curHLEntry = $('._list .focus');
+
+  if (curHLEntry) {
+    // todo patch up entry on active entry
+    if (curHLEntry.classList.contains('active')) {
+      toggleListContentView();
 
       return;
     }
-    curFocusedEntry.click();
-    searchInput.blur();
+
+    curHLEntry.click();
+    uiRefs.searchInput.blur();
   }
 }
-// todo the same patchup active entry action
-document.querySelector('._sidebar').addEventListener('click', function patchUpActiveEntryBehavior (e){
-  if (e.target.classList.contains('active')){
-    document.querySelector('a._menu-link').click();
+// todo an upstream problem: in mobile view, click on active entry should still jump to content
+uiRefs.sidebar.addEventListener('click', function patchUpActiveEntryBehavior (e) {
+  if (e.target.classList.contains('active')) {
+    toggleListContentView();
   }
 });
 
-// HACK: I've used setTimeout for various key events due to various timing
-// issues.
-searchInput.addEventListener('input', function searchInputCB () {
+// todo: remove setTimeout for various key events due to timing issues.
+uiRefs.searchInput.addEventListener('input', function searchInputCB () {
   // Hide notice bar that informs the user some documentation is not enabled.
-  var noticeBar = document.querySelector('._notice');
+  var noticeBar = $('._notice');
   if (noticeBar) {
     noticeBar.style.display = "none";
   }
 
-  setTimeout(focusFirst, 200);
+  setTimeout(hlFirst, 200);
 });
 
 function isTypingKey (keyCode) {
   return ((keyCode === 8)       // backspace
+          || (keyCode === 27)      // esc
           || (keyCode === 190)  // '.'
           || (keyCode === 186)  // ':'
-          // ascii code
+          // alphanumeric keys
           || (48 <= keyCode && keyCode <= 57)
           || (65 <= keyCode && keyCode <= 90));
 }
 
-function handleCandidatesListNavigationControls (keyEvent) {
-  searchInput.blur();
-  document.querySelector('._list .focus').focus();
+function handleListNavControls (keyEvent) {
+  focusHLEntry();
 
   switch (keyEvent.which) {
   case 38:                      // up
-    focusPrev();
+    hlPrevAndScrollTo();
+    // do NOT move scrollbar
     keyEvent.preventDefault();
     break;
   case 40:                      // down
-    focusNext();
+    hlNextAndScrollTo();
     keyEvent.preventDefault();
     break;
     // enter can now toggle list and content view
   case 13:                      // enter
-    chooseCurFocused();
+    chooseHL();
     break;
   case 33:                      // page up
-    setTimeout(focusFirstVisible, 100);
+    setTimeout(hlFirstVisible, 100);
     break;
   case 34:                      // page down
-    setTimeout(focusLastVisible, 100);
+    setTimeout(hlLastVisible, 100);
     break;
   default:
-    console.log('List-Nav, unhandled key: ' + keyEvent.which);
+    // console.log('List-Nav, unhandled key: ' + keyEvent.which);
     return;
   }
 }
 
 function handleContentNavControls (keyEvent) {
-  searchInput.blur();
-  document.querySelector('._container').focus();
+  focusContent();
 
   switch (keyEvent.which) {
     // enter can now toggle list and content view
   case 13:                      // enter
-    chooseCurFocused();
+    toggleListContentView();
     break;
   default:
-    console.log('Content-Nav, unhandled key: ' + keyEvent.which);
+    // console.log('Content-Nav, unhandled key: ' + keyEvent.which);
     return;
   }
 }
 
+function handleNavControls (keyEvent) {
+  // Control keys for easy navigation
+  // ref: http://stackoverflow.com/a/4866269/2526378
+  if ( currentView() === 'list' ) {
+    handleListNavControls(keyEvent);
+  } else {
+    handleContentNavControls(keyEvent);
+  }
+}
+
 window.onkeydown = function keyDownCB (e) {
-  // use form attribute to check whether the typing is in the input
+  // use form attribute to check whether the focus is in the input
   var isInputFocused = e.target.form;
   var keyCode = e.which;
 
-  // typing to immediately re-focus the input box
+  // * Auto-Typing
+  //
+  // backspace and most alphanumeric keys are considered typing keys
+  // they immediately re-focus the input box whatever the current views
   if (isTypingKey(keyCode)) {
-    //if (keyCode !== 8) {
-    //  // Erase the content as well unless it's backspace
-    //  searchInput.value = '';
-    //}
-    if(!isInputFocused){
-      searchInput.focus();
+    // todo maybe an option for erase the content? for now no erase
+    if (!isInputFocused) {
+      uiRefs.searchInput.focus();
     }
 
     return;
   }
 
-  // Control keys for easy navigation
-  // ref: http://stackoverflow.com/a/4866269/2526378
-  if ( document.querySelector('._sidebar').style.display === 'none' ) {
-    handleContentNavControls(e);
-  } else {
-    handleCandidatesListNavigationControls(e);
-  }
+  // * Navigation controls
+  handleNavControls(e);
 };
 
 // Give mouse visual feedback
 // NOTE: ._list is NOT available
-document.querySelector('._sidebar')
+uiRefs.sidebar
   .addEventListener('mousedown', function sidebarMousedownCB (e) {
     var entry = e.target;
-    var entryListNode = document.querySelector('._list');
 
-    if (!entryListNode) return;
-    if (entry.parentNode !== entryListNode) return;
+    if (currentView() !== 'list'
+        || !entry.classList.contains('_list-item')) {
+      return;
+    }
 
-    focusThisEntry(entry);
+    hlEntry(entry);
   });
