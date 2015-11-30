@@ -30,12 +30,9 @@ function injectStyles () {
   popupOnlyStyles.forEach(
     contentStyleBlock =>
       contentStyleBlock.css.forEach(
-        styleFile =>
-          bgGlobal.addMsgEventListener('bg.popup.load', function injectSingleStyle () {
-            chrome.tabs.insertCSS(bgGlobal.popup.tabId, {
-              file: styleFile
-            });
-          })
+        styleFile => chrome.tabs.insertCSS(bgGlobal.popup.tabId, {
+          file: styleFile
+        })
       )
   );
 }
@@ -44,17 +41,21 @@ function injectScripts () {
   popupOnlyContentScripts.forEach(
     contentScriptBlock =>
       contentScriptBlock.js.forEach(
-        scriptFile =>
-          bgGlobal.addMsgEventListener('bg.popup.load', function injectSingleScript () {
-            chrome.tabs.executeScript(bgGlobal.popup.tabId, {
-              runAt: contentScriptBlock.run_at,
-              file: scriptFile,
-            });
-          })
+        scriptFile => chrome.tabs.executeScript(bgGlobal.popup.tabId, {
+          runAt: contentScriptBlock.run_at,
+          file: scriptFile,
+        })
       )
   );
 }
 
+chrome.tabs.onUpdated.addListener(function popupTabOnUpdatedCB (tabId, changeInfo) {
+  if (tabId !== bgGlobal.popup.tabId) {
+    return;
+  }
 
-injectScripts();
-injectStyles();
+  if (changeInfo.status === 'loading') {
+    injectStyles();
+    injectScripts();
+  }
+});
