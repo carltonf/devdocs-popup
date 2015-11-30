@@ -129,6 +129,10 @@ function focusContent () {
   uiRefs.content.focus();
 }
 
+function focusSearchInput () {
+  uiRefs.searchInput.focus();
+}
+
 function toggleListContentView () {
   // todo call function to switch directly
   $('a._menu-link').click();
@@ -209,12 +213,21 @@ function handleListNavControls (keyEvent) {
     break;
   default:
     // console.log('List-Nav, unhandled key: ' + keyEvent.which);
+    focusSearchInput();
     return;
   }
 }
 
 function handleContentNavControls (keyEvent) {
+  // keys that we rely on their default actions given the focus is correct.
+  // up/down arrows, page up/down, space (scroll down)
+  var defaultNavKeys = [38, 40, 33, 34, 32];
+
   focusContent();
+
+  if (defaultNavKeys.indexOf(keyEvent.which) > -1) {
+    return;
+  }
 
   switch (keyEvent.which) {
     // enter can now toggle list and content view
@@ -223,13 +236,16 @@ function handleContentNavControls (keyEvent) {
     break;
   default:
     // console.log('Content-Nav, unhandled key: ' + keyEvent.which);
-    return;
+    focusSearchInput();
   }
 }
 
 function handleNavControls (keyEvent) {
   // Control keys for easy navigation
   // ref: http://stackoverflow.com/a/4866269/2526378
+  //
+  // NOTE: all sub handlers should keep focus in search input if keys are not
+  // handled.
   if ( currentView() === 'list' ) {
     handleListNavControls(keyEvent);
   } else {
@@ -249,7 +265,7 @@ window.onkeydown = function keyDownCB (e) {
   if (isTypingKey(keyCode)) {
     // todo maybe an option for erase the content? for now no erase
     if (!isInputFocused) {
-      uiRefs.searchInput.focus();
+      focusSearchInput();
     }
 
     return;
