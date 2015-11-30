@@ -128,3 +128,17 @@ function createContextMenuEntry () {
 }
 
 createContextMenuEntry();
+
+
+// Communicate with content scripts
+chrome.runtime.onMessage.addListener(function chromeMsgHandler (msg, sender, sendRes) {
+  switch (msg.command) {
+  case 'cmd.query.isPopup':
+    // NOTE: rely on "windows.create" callback returns first (it should I think?)
+    sendRes({
+      result: (bgGlobal.popup.tabId === sender.tab.id)
+    });
+    break;
+  default:
+  }
+});

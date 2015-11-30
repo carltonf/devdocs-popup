@@ -7,8 +7,7 @@
 var popupOnlyContentScripts = [
   {
     "run_at": "document_start",
-    "js": [ "scripts/content/doc-start-init.js",
-            "scripts/content/change-ua.js" ],
+    "js": [ "scripts/content/doc-start-init.js" ],
     "matches": ["http://devdocs.io/*"]
   },
   {
@@ -26,13 +25,28 @@ var popupOnlyStyles = [
   }
 ];
 
+function injectCB () {
+  // a dummy handler just try to capture errors
+  if (chrome.runtime.lastError) {
+    const errorMsg = chrome.runtime.lastError.message;
+    if (errorMsg.indexOf('No tab with id') > -1) {
+      // ignore missing tab id error, it usually only happens when we are
+      // testing: we close the window too quick before the injections.
+      return;
+    }
+
+    // or rethrow the error?
+    console.error(errorMsg);
+  }
+}
+
 function injectStyles () {
   popupOnlyStyles.forEach(
     contentStyleBlock =>
       contentStyleBlock.css.forEach(
         styleFile => chrome.tabs.insertCSS(bgGlobal.popup.tabId, {
           file: styleFile
-        })
+        }, injectCB)
       )
   );
 }
@@ -44,7 +58,7 @@ function injectScripts () {
         scriptFile => chrome.tabs.executeScript(bgGlobal.popup.tabId, {
           runAt: contentScriptBlock.run_at,
           file: scriptFile,
-        })
+        }, injectCB)
       )
   );
 }

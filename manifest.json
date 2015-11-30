@@ -6,7 +6,10 @@
   "content_scripts":[
     {
       "run_at": "document_start",
-      "js": [ "scripts/content/doc-start-inject-req.js" ],
+      "js": [
+        "scripts/content/change-ua.js",
+        "scripts/content/doc-start-inject-req.js"
+      ],
       "matches": ["http://devdocs.io/*"]
     }
   ],

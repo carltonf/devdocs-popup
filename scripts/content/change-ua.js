@@ -44,4 +44,23 @@ function changeUAInPage () {
 }
 
 
-changeUAInPage();
+// Only change UA for the popup devdocs
+//
+// NOTE: programatic injection relies on messaging or async event, we can't
+// guarantee the timing of changeUAInPage invocation. The timing of change UA is
+// too important, so have this script executed at the first chance and minimize
+// all possible delays. For now, the only async delay is to check whether this
+// tab is popup tab.
+//
+// TODO fake UA to have mobile view on desktop is too hacky, try to push this UI
+// mode to upstream.
+chrome.runtime.sendMessage({
+  "command": "cmd.query.isPopup"
+}, function cmdQueryIsPoupResCB (res) {
+  if (res === undefined) {
+    console.error("Can't check current window is Popup window.");
+    return false;
+  } else if (res.result === true) {
+    changeUAInPage();
+  }
+});
