@@ -49,13 +49,11 @@ function injectScripts () {
   );
 }
 
-chrome.tabs.onUpdated.addListener(function popupTabOnUpdatedCB (tabId, changeInfo) {
-  if (tabId !== bgGlobal.popup.tabId) {
+chrome.runtime.onMessage.addListener(function injectScriptsAsContentRequests (msg) {
+  if (msg.command !== 'notify.document_start') {
     return;
   }
 
-  if (changeInfo.status === 'loading') {
-    injectStyles();
-    injectScripts();
-  }
+  injectStyles();
+  injectScripts();
 });

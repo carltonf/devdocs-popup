@@ -3,7 +3,13 @@
   "version": "0.0.1",
   "manifest_version": 2,
   "description": "devdocs.io popup with tuned UI and handy shortcuts for easy, quick lookup.",
-  "content_scripts":[],
+  "content_scripts":[
+    {
+      "run_at": "document_start",
+      "js": [ "scripts/content/doc-start-inject-req.js" ],
+      "matches": ["http://devdocs.io/*"]
+    }
+  ],
   "background": {
     "scripts": [
       "scripts/background/init.js",
