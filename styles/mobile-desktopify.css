@@ -33,3 +33,11 @@ and margin of the element.) */
   /* TODO adapt with window size */
   height: 100%;
 }
+
+
+/* Customization */
+/* give visual feedbar when mouse hover on entries*/
+/* todo upstream? */
+a._list-item:hover {
+  background-color: #e7f8e1;
+}
