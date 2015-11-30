@@ -34,10 +34,22 @@ and margin of the element.) */
   height: 100%;
 }
 
+/* make ._list-reveal show up when hoverred over */
+/* TODO however the reveal list is problematic(upstream) in mobile view,
+clicking on it would jump to article and the list, though available, it's scroll
+down some lines.*/
+._list-item:hover > ._list-reveal {
+  display: block;
+}
+
+._list-item:hover > ._list-reveal::before {
+  background: rgba(58, 29, 29, 0.9);
+  box-shadow: 0 -3px rgba(58, 29, 29, 0.9), 0 3px rgba(58, 29, 29, 0.9);
+}
 
 /* Customization */
 /* give visual feedbar when mouse hover on entries*/
 /* todo upstream? */
-a._list-item:hover {
+._list-item:hover {
   background-color: #e7f8e1;
 }

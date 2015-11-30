@@ -120,8 +120,14 @@ function currentView () {
 }
 
 function focusHLEntry () {
+  var hlEntry = $('._list .focus');
+
+  if (!hlEntry) {
+    return;
+  }
+
   uiRefs.searchInput.blur();
-  $('._list .focus').focus();
+  hlEntry.focus();
 }
 
 function focusContent () {
@@ -267,6 +273,7 @@ window.onkeydown = function keyDownCB (e) {
     if (!isInputFocused) {
       focusSearchInput();
     }
+    // todo esc on empty input to minimize the popup?
 
     return;
   }
