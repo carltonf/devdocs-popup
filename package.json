@@ -11,6 +11,7 @@
   },
   "scripts": {
     "lint": "eslint --format unix scripts/ ; exit 0",
+    "lint-fix": "eslint --fix scripts/ ; exit 0",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
