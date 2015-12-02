@@ -34,6 +34,11 @@ and margin of the element.) */
   height: 100%;
 }
 
+html._mobile ._content:focus {
+  /* disable user-agent outline style */
+  outline: none;
+}
+
 /* make ._list-reveal show up when hoverred over */
 /* TODO however the reveal list is problematic(upstream) in mobile view,
 clicking on it would jump to article and the list, though available, it's scroll
