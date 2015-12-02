@@ -1,6 +1,6 @@
 {
   "name": "Devdocs Popup",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "manifest_version": 2,
   "description": "devdocs.io popup with tuned UI and handy shortcuts for easy, quick lookup.",
   "content_scripts":[
