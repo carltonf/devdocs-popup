@@ -120,14 +120,14 @@ function currentView () {
 }
 
 function focusHLEntry () {
-  var hlEntry = $('._list .focus');
+  var curhlEntry = $('._list .focus');
 
-  if (!hlEntry) {
+  if (!curhlEntry) {
     return;
   }
 
   uiRefs.searchInput.blur();
-  hlEntry.focus();
+  curhlEntry.focus();
 }
 
 function focusContent () {
@@ -174,6 +174,7 @@ uiRefs.sidebar.addEventListener('click', function patchUpActiveEntryBehavior (e)
 });
 
 // todo: remove setTimeout for various key events due to timing issues.
+// MutationObserver might be a good option
 uiRefs.searchInput.addEventListener('input', function searchInputCB () {
   // Hide notice bar that informs the user some documentation is not enabled.
   var noticeBar = $('._notice');
@@ -181,69 +182,70 @@ uiRefs.searchInput.addEventListener('input', function searchInputCB () {
     noticeBar.style.display = "none";
   }
 
-  setTimeout(hlFirst, 200);
+  setTimeout(hlFirst, 50);
 });
 
-function isTypingKey (keyCode) {
-  return ((keyCode === 8)       // backspace
-          || (keyCode === 27)      // esc
-          || (keyCode === 190)  // '.'
-          || (keyCode === 186)  // ':'
-          // alphanumeric keys
-          || (48 <= keyCode && keyCode <= 57)
-          || (65 <= keyCode && keyCode <= 90));
-}
-
-function handleListNavControls (keyEvent) {
-  focusHLEntry();
-
-  switch (keyEvent.which) {
-  case 38:                      // up
+// TODO split key map into separate modules
+const listNavKeyActionMap = {
+  '38': function listNavUp (keyEvent) {
     hlPrevAndScrollTo();
     // do NOT move scrollbar
     keyEvent.preventDefault();
-    break;
-  case 40:                      // down
+  },
+  '40': function listNavDown (keyEvent) {
     hlNextAndScrollTo();
     keyEvent.preventDefault();
-    break;
-    // enter can now toggle list and content view
-  case 13:                      // enter
+  },
+  '13': function listNavEnter () {
     chooseHL();
-    break;
-  case 33:                      // page up
+  },
+  '33': function listNavPageUp () {
     setTimeout(hlFirstVisible, 100);
-    break;
-  case 34:                      // page down
+  },
+  '34': function listNavPageDown () {
     setTimeout(hlLastVisible, 100);
-    break;
-  default:
-    // console.log('List-Nav, unhandled key: ' + keyEvent.which);
-    focusSearchInput();
-    return;
   }
+};
+function handleListNavControls (keyEvent) {
+  var keyAction = listNavKeyActionMap[keyEvent.which];
+
+  if (keyAction) {
+    focusHLEntry();
+    keyAction(keyEvent);
+    return true;
+  }
+
+  // console.log('List-Nav, unhandled key: ' + keyEvent.which);
+  return false;
 }
 
 function handleContentNavControls (keyEvent) {
   // keys that we rely on their default actions given the focus is correct.
-  // up/down arrows, page up/down, space (scroll down)
-  var defaultNavKeys = [38, 40, 33, 34, 32];
+  var defaultNavKeys = [
+    36, 35,                     // home/end
+    38, 40,                     // up/down
+    33, 34,                     // page up/down
+    32                          // space (scroll down)
+  ];
+  var keyCode = keyEvent.which;
+  var isKeyHandled = (defaultNavKeys.indexOf(keyEvent.which) > -1)
+        || (keyCode === 13);
 
-  focusContent();
+  if (isKeyHandled) {
+    focusContent();
 
-  if (defaultNavKeys.indexOf(keyEvent.which) > -1) {
-    return;
+    switch (keyCode) {
+    case 13:                      // enter
+      toggleListContentView();
+      break;
+    default:
+    }
+
+    return true;
   }
 
-  switch (keyEvent.which) {
-    // enter can now toggle list and content view
-  case 13:                      // enter
-    toggleListContentView();
-    break;
-  default:
-    // console.log('Content-Nav, unhandled key: ' + keyEvent.which);
-    focusSearchInput();
-  }
+  // console.log('Content-Nav, unhandled key: ' + keyEvent.which);
+  return false;
 }
 
 function handleNavControls (keyEvent) {
@@ -253,33 +255,65 @@ function handleNavControls (keyEvent) {
   // NOTE: all sub handlers should keep focus in search input if keys are not
   // handled.
   if ( currentView() === 'list' ) {
-    handleListNavControls(keyEvent);
-  } else {
-    handleContentNavControls(keyEvent);
+    return handleListNavControls(keyEvent);
+  } else if (currentView() === 'content') {
+    return handleContentNavControls(keyEvent);
   }
+
+  return false;
 }
 
-window.onkeydown = function keyDownCB (e) {
+function handleTypingKeys (keyEvent) {
   // use form attribute to check whether the focus is in the input
-  var isInputFocused = e.target.form;
-  var keyCode = e.which;
+  var isInputFocused = keyEvent.target.form;
+  var keyCode = keyEvent.which;
+  // backspace and most alphanumeric keys are considered auto typing keys, they
+  // immediately re-focus the input box whatever the current view
+  var isAutoTypingKey =
+        ((keyCode === 8)       // backspace
+         || (keyCode === 190)  // '.'
+         || (keyCode === 186)  // ':'
+         // alphanumeric keys
+         || (48 <= keyCode && keyCode <= 57)
+         || (65 <= keyCode && keyCode <= 90));
+  var isEscKey = (keyCode === 27);
+  var isKeyHandled = isAutoTypingKey || isEscKey;
 
-  // * Auto-Typing
-  //
-  // backspace and most alphanumeric keys are considered typing keys
-  // they immediately re-focus the input box whatever the current views
-  if (isTypingKey(keyCode)) {
-    // todo maybe an option for erase the content? for now no erase
-    if (!isInputFocused) {
-      focusSearchInput();
-    }
-    // todo esc on empty input to minimize the popup?
-
-    return;
+  if (isAutoTypingKey && !isInputFocused) {
+    focusSearchInput();
   }
 
-  // * Navigation controls
-  handleNavControls(e);
+  if (isEscKey && !isInputFocused) {
+    // Esc is special auto typing keys: it not only refocuses input box but also
+    // select all text.
+    uiRefs.searchInput.select();
+  }
+  // todo esc on empty input to minimize the popup?
+
+  return isKeyHandled;
+}
+
+// function to handle keys that are not handled by all other key handlers
+function handleUnhandledKeys (keyEvent) {
+  if (!keyEvent.target.form) {
+    focusSearchInput();
+  }
+  return true;
+}
+
+window.onkeydown = function keyHandlersController (e) {
+  // NOTE: all key handlers should return boolean values, true if the key is
+  // handled, false if not.
+  // TODO: handleTypingKeys be merged with handleUnhandledKeys?
+  var keyHandlers = [
+    handleTypingKeys,
+    handleNavControls,
+    handleUnhandledKeys,
+  ];
+
+  keyHandlers.some(function keyHandlerRunner (handler) {
+    return handler(e);
+  });
 };
 
 // Give mouse visual feedback
