@@ -163,17 +163,21 @@ function chooseHL () {
     }
 
     curHLEntry.click();
-    focusContent();
   }
 }
+
 // todo an upstream problem: in mobile view, click on active entry should still jump to content
+// this is a hacky solution
 uiRefs.sidebar.addEventListener('click', function patchUpActiveEntryBehavior (e) {
-  if (e.target.classList.contains('active')) {
+  var entry = e.target;
+
+  if (entry.classList.contains('active')
+      && (entry.getAttribute('href') === window.location.pathname)) {
     toggleListContentView();
   }
 });
 
-// todo: remove setTimeout for various key events due to timing issues.
+// TODO: remove setTimeout for various key events due to timing issues.
 // MutationObserver might be a good option
 uiRefs.searchInput.addEventListener('input', function searchInputCB () {
   // Hide notice bar that informs the user some documentation is not enabled.

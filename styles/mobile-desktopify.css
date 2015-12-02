@@ -3,21 +3,31 @@
  * more specific so as to override page CSS.
  */
 
-html._mobile {
+/* ================ */
+/* About these "none" styles:
+ *
+ * The original code has its own "scrollTo" method for url hash, the "none"
+ * styles change the layout and make this scrolling fail. Disable but still keep
+ * the code here, as I believe it has taken quite a while to locate the cause
+ * and we might come across such problems a lot (a lot of navigations are
+ * customized).
+ *
+ * I believe the cause is "scrollTo" is scrolling the whole html....
+ */
+none html._mobile {
   overflow: hidden;
 }
 
-html._mobile ._app {
+none html._mobile ._app {
   overflow: hidden;
   /* NOTE: on desktop the bottom has a banner displaying link info, which obscures
-the last item.
-
-  TODO Temp fix: refer to original desktop version to fine-tune scroll behavior.*/
+the last item. */
+  /* TODO Temp fix: refer to original desktop version to fine-tune scroll behavior.*/
   padding-bottom: 20px;
 }
 
-html._mobile ._sidebar,
-html._mobile ._content {
+none html._mobile ._sidebar,
+none html._mobile ._content {
   overflow-x: auto;
   overflow-y: auto;
 
@@ -34,6 +44,29 @@ and margin of the element.) */
   height: 100%;
 }
 
+/* ================ */
+/* stylish scrollbar: copied from '._sidebar::' */
+
+html._mobile::-webkit-scrollbar-button {
+    display: none;
+}
+
+html._mobile::-webkit-scrollbar-track {
+    background: #fff;
+}
+html._mobile::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 10px;
+}
+html._mobile::-webkit-scrollbar-thumb {
+    min-height: 2rem;
+    background: #d2d2d2;
+    background-clip: padding-box;
+    border: 3px solid #fff;
+    border-radius: 5px;
+}
+
+/* ================================================================ */
 html._mobile ._content:focus {
   /* disable user-agent outline style */
   outline: none;
