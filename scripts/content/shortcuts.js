@@ -271,49 +271,63 @@ function handleTypingKeys (keyEvent) {
   // use form attribute to check whether the focus is in the input
   var isInputFocused = keyEvent.target.form;
   var keyCode = keyEvent.which;
-  // backspace and most alphanumeric keys are considered auto typing keys, they
-  // immediately re-focus the input box whatever the current view
+  // *unmodified* backspace and most alphanumeric keys are considered auto
+  // typing keys, they immediately re-focus the input box whatever the current
+  // view
   var isAutoTypingKey =
-        ((keyCode === 8)       // backspace
-         || (keyCode === 190)  // '.'
-         || (keyCode === 186)  // ':'
-         // alphanumeric keys
-         || (48 <= keyCode && keyCode <= 57)
-         || (65 <= keyCode && keyCode <= 90));
+        (!keyEvent.altKey && !keyEvent.ctrlKey)
+        && ((keyCode === 8)       // backspace
+            || (keyCode === 190)  // '.'
+            || (keyCode === 186)  // ':'
+            // alphanumeric keys
+            || (48 <= keyCode && keyCode <= 57)
+            || (65 <= keyCode && keyCode <= 90));
   var isEscKey = (keyCode === 27);
-  var isKeyHandled = isAutoTypingKey || isEscKey;
+  var isKeyHandled = (isAutoTypingKey || isEscKey);
 
-  if (isAutoTypingKey && !isInputFocused) {
-    focusSearchInput();
+  if (isInputFocused) {
+    // keys like: home/end have common meanings in input box: handle them, so
+    // users are not confused.
+    if (keyCode === 36 || keyCode === 35) {
+      return true;
+    }
+  } else {
+    // input is NOT focused
+    if (isAutoTypingKey) {
+      focusSearchInput();
+    }
+
+    if (isEscKey) {
+      // Esc is special auto typing keys: it not only refocuses input box but also
+      // select all text.
+      uiRefs.searchInput.select();
+    }
+    // todo esc on empty input to minimize the popup?
+
+    return isKeyHandled;
   }
-
-  if (isEscKey && !isInputFocused) {
-    // Esc is special auto typing keys: it not only refocuses input box but also
-    // select all text.
-    uiRefs.searchInput.select();
-  }
-  // todo esc on empty input to minimize the popup?
-
-  return isKeyHandled;
-}
-
-// function to handle keys that are not handled by all other key handlers
-function handleUnhandledKeys (keyEvent) {
-  if (!keyEvent.target.form) {
-    focusSearchInput();
-  }
-  return true;
 }
 
 window.onkeydown = function keyHandlersController (e) {
+  var keyCode = e.which;
+
+  // NOTE: "keyEvent.keyIdentifier" has more human-readable name
+  var isOnlyControlKeys =
+        (keyCode === '17' // control
+         || keyCode === '18' // alt
+        );
+
   // NOTE: all key handlers should return boolean values, true if the key is
   // handled, false if not.
   // TODO: handleTypingKeys be merged with handleUnhandledKeys?
   var keyHandlers = [
     handleTypingKeys,
     handleNavControls,
-    handleUnhandledKeys,
   ];
+
+  if (isOnlyControlKeys) {
+    return;
+  }
 
   keyHandlers.some(function keyHandlerRunner (handler) {
     return handler(e);
